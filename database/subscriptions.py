@@ -1,5 +1,5 @@
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import aiosqlite
 
@@ -18,7 +18,8 @@ async def upsert_subscription(
                 payment_id = excluded.payment_id,
                 paid_at = excluded.paid_at,
                 expires_at = excluded.expires_at,
-                status = 'active'
+                status = 'active',
+                renewal_reminder_sent_at = NULL
             """,
             (user_id, payment_id, paid_at.isoformat(), expires_at.isoformat()),
         )
@@ -58,5 +59,30 @@ async def mark_expired(user_id: int) -> None:
         await db.execute(
             "UPDATE subscriptions SET status = 'expired' WHERE user_id = ?",
             (user_id,),
+        )
+        await db.commit()
+
+
+async def get_subscriptions_due_for_reminder(now: datetime) -> list[sqlite3.Row]:
+    window_end = now + timedelta(hours=24)
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = sqlite3.Row
+        cursor = await db.execute(
+            """
+            SELECT * FROM subscriptions
+            WHERE status = 'active'
+              AND expires_at BETWEEN ? AND ?
+              AND renewal_reminder_sent_at IS NULL
+            """,
+            (now.isoformat(), window_end.isoformat()),
+        )
+        return await cursor.fetchall()
+
+
+async def mark_reminder_sent(user_id: int, sent_at: datetime) -> None:
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute(
+            "UPDATE subscriptions SET renewal_reminder_sent_at = ? WHERE user_id = ?",
+            (sent_at.isoformat(), user_id),
         )
         await db.commit()
