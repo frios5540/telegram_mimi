@@ -1,0 +1,4 @@
+aiogram==3.29.1
+python-dotenv==1.2.2
+mercadopago==3.3.0
+aiosqlite==0.21.0

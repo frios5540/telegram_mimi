@@ -1,0 +1,51 @@
+import asyncio
+
+from aiogram import Bot, Dispatcher
+from aiogram import F
+from aiogram.types import Message
+from aiohttp import web
+
+from config.config import BOT_TOKEN, PORT
+from database.db import init_db
+from handlers import get_main_router
+from payments.webhook import create_webhook_app
+from services.expiration_service import run_expiration_checker
+from utils.logger import setup_logging
+
+
+async def run_webhook_server(bot: Bot) -> None:
+    app = create_webhook_app(bot)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, host="0.0.0.0", port=PORT)
+    await site.start()
+    await asyncio.Event().wait()
+
+
+async def main() -> None:
+    setup_logging()
+    await init_db()
+
+    bot = Bot(token=BOT_TOKEN)
+    dp = Dispatcher()
+
+    dp.include_router(get_main_router())
+
+    @dp.message()
+    async def debug_all(message):
+        print("\n=== UPDATE ===")
+        print("Chat ID:", message.chat.id)
+        print("Type:", message.chat.type)
+        print("Text:", message.text)
+
+    await bot.delete_webhook(drop_pending_updates=True)
+
+    await asyncio.gather(
+        dp.start_polling(bot),
+        run_webhook_server(bot),
+        run_expiration_checker(bot),
+    )
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
