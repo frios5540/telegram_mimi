@@ -1,6 +1,6 @@
 import asyncio
 
-from aiogram import Bot, Dispatcher
+from aiogram import Bot, Dispatcher, Router
 from aiogram import F
 from aiogram.types import Message
 from aiohttp import web
@@ -31,12 +31,16 @@ async def main() -> None:
 
     dp.include_router(get_main_router())
 
-    @dp.message()
+    debug_router = Router()
+
+    @debug_router.message()
     async def debug_all(message):
         print("\n=== UPDATE ===")
         print("Chat ID:", message.chat.id)
         print("Type:", message.chat.type)
         print("Text:", message.text)
+
+    dp.include_router(debug_router)
 
     await bot.delete_webhook(drop_pending_updates=True)
 
