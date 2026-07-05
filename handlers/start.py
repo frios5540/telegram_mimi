@@ -5,8 +5,11 @@ from aiogram.types import Message
 router = Router()
 
 WELCOME_MESSAGE = (
-    "Bienvenido a mi canal premium, por fin encontraste lo que llevas "
-    "buscando tanto tiempo, espero te encante:D"
+    "🐰 Bienvenido a mi VIP 🐰
+
+Aquí podrás acceder al contenido mas exclusivo que tanto has buscado 💙.
+
+Usa /suscribirme para obtener tu acceso mensual ⭐"
 )
 
 

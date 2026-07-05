@@ -20,6 +20,6 @@ async def cmd_subscribe(message: Message) -> None:
 
     await message.answer(
         f"Suscripción mensual: ${SUBSCRIPTION_PRICE_MXN:.0f} MXN.\n"
-        "Al confirmarse el pago recibirás un link de invitación de un solo uso al canal.",
+        "Al confirmarse el pago recibirás un link de invitación al canal el cual asegura tu suscripción por un mes 💙⭐",
         reply_markup=keyboard,
     )
