@@ -9,6 +9,7 @@ from config.config import BOT_TOKEN, PORT
 from database.db import init_db
 from handlers import get_main_router
 from payments.webhook import create_webhook_app
+from services.daily_report_service import run_daily_report_scheduler
 from services.expiration_service import run_expiration_checker
 from services.reminder_service import run_reminder_checker
 from utils.logger import setup_logging
@@ -50,6 +51,7 @@ async def main() -> None:
         run_webhook_server(bot),
         run_expiration_checker(bot),
         run_reminder_checker(bot),
+        run_daily_report_scheduler(bot),
     )
 
 

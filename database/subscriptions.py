@@ -86,3 +86,45 @@ async def mark_reminder_sent(user_id: int, sent_at: datetime) -> None:
             (sent_at.isoformat(), user_id),
         )
         await db.commit()
+
+
+async def count_active_subscriptions() -> int:
+    async with aiosqlite.connect(DB_PATH) as db:
+        cursor = await db.execute(
+            "SELECT COUNT(*) FROM subscriptions WHERE status = 'active'"
+        )
+        row = await cursor.fetchone()
+        return row[0]
+
+
+async def count_expired_subscriptions() -> int:
+    async with aiosqlite.connect(DB_PATH) as db:
+        cursor = await db.execute(
+            "SELECT COUNT(*) FROM subscriptions WHERE status = 'expired'"
+        )
+        row = await cursor.fetchone()
+        return row[0]
+
+
+async def count_payments_since(since: datetime) -> int:
+    async with aiosqlite.connect(DB_PATH) as db:
+        cursor = await db.execute(
+            "SELECT COUNT(*) FROM subscriptions WHERE paid_at >= ?",
+            (since.isoformat(),),
+        )
+        row = await cursor.fetchone()
+        return row[0]
+
+
+async def count_active_expiring_within(now: datetime, window: timedelta) -> int:
+    window_end = now + window
+    async with aiosqlite.connect(DB_PATH) as db:
+        cursor = await db.execute(
+            """
+            SELECT COUNT(*) FROM subscriptions
+            WHERE status = 'active' AND expires_at BETWEEN ? AND ?
+            """,
+            (now.isoformat(), window_end.isoformat()),
+        )
+        row = await cursor.fetchone()
+        return row[0]
